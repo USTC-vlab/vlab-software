@@ -1,4 +1,4 @@
-FROM buildpack-deps:22.04-scm
+FROM buildpack-deps:20.04-scm
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN sed -Ei 's/(archive|security)\.ubuntu\.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list && \
