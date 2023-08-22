@@ -8,7 +8,7 @@ PREFIX=/opt/vlab/riscv64
 git clone --depth=1 --single-branch "$REPO" "$WORKDIR"
 
 cd "$WORKDIR"
-./configure --prefix="$PREFIX" --with-arch=rv64imc --with-abi=lp64
+./configure --prefix="$PREFIX" --enable-multilib --target=riscv64-multilib-elf
 make -j $(nproc)
 make install
 tar zcf /output/riscv.tar.gz -C / "$PREFIX"
