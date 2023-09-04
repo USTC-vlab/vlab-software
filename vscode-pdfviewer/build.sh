@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 WORKDIR="$PWD/vscode-pdfviewer"
 REPO=https://github.com/tomoki1207/vscode-pdfviewer
@@ -8,7 +8,7 @@ git clone --filter=blob:none --single-branch "$REPO" "$WORKDIR"
 
 cd "$WORKDIR"
 git checkout "$COMMIT"
-sed -i 's/"ui"/"ui", "workspace"' package.json
+sed -i 's/"ui"/"ui", "workspace"/' package.json
 npm install
 npm run package
 mv *.vsix /output/
