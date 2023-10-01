@@ -43,26 +43,6 @@ WantedBy=default.target
 EOF
 }
 
-write_firewall_rules() {
-  if [ -e "/etc/centos-release" ]; then
-    RULES4=/etc/sysconfig/iptables
-    RULES6=/etc/sysconfig/ip6tables
-  else
-    RULES4=/etc/iptables/rules.v4
-    RULES6=/etc/iptables/rules.v6
-  fi
-  mkdir -p "$(dirname "$RULES4")"
-  cat << EOF
-iptables -D INPUT ! -i lo ! -s 172.31.0.2 -p tcp --dport 1024 -j REJECT --reject-with tcp-reset >/dev/null 2>&1
-iptables -I INPUT ! -i lo ! -s 172.31.0.2 -p tcp --dport 1024 -j REJECT --reject-with tcp-reset
-iptables-save > $RULES4
-
-ip6tables -D INPUT ! -i lo -p tcp --dport 1024 -j REJECT --reject-with tcp-reset >/dev/null 2>&1
-ip6tables -I INPUT ! -i lo -p tcp --dport 1024 -j REJECT --reject-with tcp-reset
-ip6tables-save > $RULES6
-EOF
-}
-
 if [ -z "$XDG_RUNTIME_DIR" ]; then
   export XDG_RUNTIME_DIR="/run/user/$UID"
 else
@@ -125,10 +105,6 @@ case "$1" in
       ln -s "$HOME/.local/share/code-server" "$HOME/.config/Code"
     fi
 
-    # Insert firewall rules if not exist
-    echo "Securing server port"
-    write_firewall_rules | sudo sh -
-
     echo "Starting $NAME"
     verbose_run systemctl --user start "$SERVICE_NAME"
     if [ $? -ne 0 ]; then
@@ -146,7 +122,6 @@ case "$1" in
     ;;
   restart)
     echo "Restarting $NAME"
-    write_firewall_rules | sudo sh - 2>/dev/null
     verbose_run systemctl --user restart "$SERVICE_NAME"
     if [ $? -ne 0 ]; then
       echo "Something went wrong, please try again later. If this problem persists, please report it to Vlab."
