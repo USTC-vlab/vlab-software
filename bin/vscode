@@ -71,7 +71,7 @@ Description=Check for Vlab VSCode updates
 OnCalendar=hourly
 RandomizedDelaySec=3600
 Persistent=true
-Unit=code-server.service
+Unit=vscode-update-check.service
 
 [Install]
 WantedBy=timers.target
