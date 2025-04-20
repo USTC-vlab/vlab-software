@@ -6,6 +6,10 @@ SERVICE_FILE=~/.config/systemd/user/code-server.service
 SERVICE_DIR="$(dirname "$SERVICE_FILE")"
 SERVICE_NAME="$(basename "$SERVICE_FILE")"
 
+VERSION_FILE=~/.vscode-version
+CHECKER_SERVICE_FILE=~/.config/systemd/user/vscode-update-check.service
+CHECKER_TIMER_FILE=~/.config/systemd/user/vscode-update-check.timer
+
 sudo_ok=""
 
 test_sudo() {
@@ -41,6 +45,53 @@ Restart=on-failure
 [Install]
 WantedBy=default.target
 EOF
+}
+
+write_checker_service_file() {
+  cat << EOF
+[Unit]
+Description=Check for Vlab VSCode updates
+After=code-server.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/vlab/bin/vscode-update-check
+
+[Install]
+WantedBy=default.target
+EOF
+}
+
+write_checker_timer_file() {
+  cat << EOF
+[Unit]
+Description=Check for Vlab VSCode updates
+
+[Timer]
+OnUnitActiveSec=1h
+RandomizedDelaySec=600
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+}
+
+add_enable_checker_files() {
+  if [ ! -e "$CHECKER_SERVICE_FILE" ]; then
+    echo "Creating update checker service file"
+    write_checker_service_file > "$CHECKER_SERVICE_FILE"
+  fi
+  if [ ! -e "$CHECKER_TIMER_FILE" ]; then
+    echo "Creating update checker timer file"
+    write_checker_timer_file > "$CHECKER_TIMER_FILE"
+  fi
+  verbose_run systemctl --user daemon-reload
+  verbose_run systemctl --user enable --now vscode-update-check.timer
+}
+
+generate_version_file() {
+  stat -c "%Y" /opt/vlab/code-server/package.json > "$VERSION_FILE"
 }
 
 if [ -z "$XDG_RUNTIME_DIR" ]; then
@@ -100,6 +151,8 @@ case "$1" in
       verbose_run systemctl --user enable "$SERVICE_NAME"
     fi
 
+    add_enable_checker_files
+
     # Create symlink for real VSCode
     if [ ! -d "$HOME/.config/Code" ]; then
       ln -s "$HOME/.local/share/code-server" "$HOME/.config/Code"
@@ -121,6 +174,7 @@ case "$1" in
     verbose_run systemctl --user disable "$SERVICE_NAME"
     ;;
   restart)
+    add_enable_checker_files
     echo "Restarting $NAME"
     verbose_run systemctl --user restart "$SERVICE_NAME"
     if [ $? -ne 0 ]; then
@@ -136,6 +190,7 @@ case "$1" in
   servicestart)
     # Internal use: Run as the actual service
     export EXTENSIONS_GALLERY='{"serviceUrl": "https://marketplace.visualstudio.com/_apis/public/gallery", "cacheUrl": "https://vscode.blob.core.windows.net/gallery/index", "itemUrl": "https://marketplace.visualstudio.com/items"}'
+    generate_version_file
     exec /opt/vlab/code-server/bin/code-server --auth=none --bind-addr=0.0.0.0:1024 --disable-telemetry
     exit 1
     ;;
