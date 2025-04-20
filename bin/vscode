@@ -68,10 +68,9 @@ write_checker_timer_file() {
 Description=Check for Vlab VSCode updates
 
 [Timer]
-OnCalendar=hourly
-RandomizedDelaySec=3600
+OnUnitActiveSec=1h
+RandomizedDelaySec=120
 Persistent=true
-Unit=vscode-update-check.service
 
 [Install]
 WantedBy=timers.target
