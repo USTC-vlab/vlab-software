@@ -69,7 +69,7 @@ Description=Check for Vlab VSCode updates
 
 [Timer]
 OnUnitActiveSec=1h
-RandomizedDelaySec=120
+RandomizedDelaySec=600
 Persistent=true
 
 [Install]
