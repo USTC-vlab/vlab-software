@@ -1,0 +1,4 @@
+#!/bin/sh
+
+export LD_PRELOAD=/opt/vlab/vivado/libs/libudev.so.1.6.9:/opt/vlab/vivado/libs/libdbus-glib-1.so.2.3.4
+exec /opt/vlab/vivado/Xilinx/Vivado/2023.1/bin/vivado -nolog -nojournal "$@"

@@ -1,0 +1,9 @@
+#!/bin/sh
+
+. /etc/os-release
+
+case "$VERSION_ID" in
+  22.04) exec /opt/vlab/gem5/v25.1-ubuntu2204/X86/gem5.opt "$@" ;;
+  24.04) exec /opt/vlab/gem5/v25.1-ubuntu2404/X86/gem5.opt "$@" ;;
+  *) echo "目前 Vlab GEM5 仅支持 Ubuntu 22.04/24.04，如果有其他需要，请联系我们。" >&2 ;;
+esac

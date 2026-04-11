@@ -56,9 +56,6 @@ After=code-server.service
 [Service]
 Type=oneshot
 ExecStart=/opt/vlab/bin/vscode-update-check
-
-[Install]
-WantedBy=default.target
 EOF
 }
 
@@ -69,7 +66,8 @@ Description=Check for Vlab VSCode updates
 
 [Timer]
 OnUnitActiveSec=1h
-RandomizedDelaySec=600
+OnActiveSec=1h
+RandomizedDelaySec=10min
 Persistent=true
 
 [Install]
