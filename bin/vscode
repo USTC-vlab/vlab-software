@@ -92,6 +92,21 @@ generate_version_file() {
   stat -c "%Y" /opt/vlab/code-server/package.json > "$VERSION_FILE"
 }
 
+get_bind_addr() {
+  if ! command -v jq >/dev/null 2>&1; then
+    echo "[W] jq is not installed, falling back to bind on 0.0.0.0" >&2
+    printf '%s\n' "0.0.0.0"
+    return
+  fi
+
+  BIND_ADDR="$(ip -j route get 172.31.0.2 2>/dev/null | jq -r '.[0].prefsrc // empty' 2>/dev/null)"
+  if [ -n "$BIND_ADDR" ]; then
+    printf '%s\n' "$BIND_ADDR"
+  else
+    printf '%s\n' "0.0.0.0"
+  fi
+}
+
 if [ -z "$XDG_RUNTIME_DIR" ]; then
   export XDG_RUNTIME_DIR="/run/user/$UID"
 else
@@ -189,7 +204,8 @@ case "$1" in
     # Internal use: Run as the actual service
     export EXTENSIONS_GALLERY='{"serviceUrl": "https://marketplace.visualstudio.com/_apis/public/gallery", "cacheUrl": "https://vscode.blob.core.windows.net/gallery/index", "itemUrl": "https://marketplace.visualstudio.com/items"}'
     generate_version_file
-    exec /opt/vlab/code-server/bin/code-server --auth=none --bind-addr=0.0.0.0:1024 --disable-telemetry
+    BIND_ADDR="$(get_bind_addr)"
+    exec /opt/vlab/code-server/bin/code-server --auth=none --bind-addr="$BIND_ADDR:1024" --disable-telemetry
     exit 1
     ;;
   *)
